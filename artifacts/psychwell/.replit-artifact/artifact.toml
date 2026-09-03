@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "PsychWell"
+description = "A privacy-first, browser-only mental wellness companion for people in Pakistan. It keeps journaling, mood tracking, self-assessments, exercises, and Dr. Aria chat on the user's device with bilingual English and Urdu support."
+version = "1.0.0"
+id = "artifacts/psychwell"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25876
+
+[services.development]
+run = "pnpm --filter @workspace/psychwell run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/psychwell", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/psychwell/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25876"
+BASE_PATH = "/"
