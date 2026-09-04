@@ -162,23 +162,47 @@ const localizeBand = (band: string, lang: Lang) => lang === 'en' ? band : ({
 const crisisPattern = /suicid|kill myself|end my life|hurt myself|self[- ]?harm|want to die|better off dead|can't stay safe|cannot stay safe|مر جانا|خودکشی|خود کو نقصان|اپنے آپ کو نقصان|زندگی ختم|محفوظ نہیں/;
 const isCrisisLanguage = (message: string) => crisisPattern.test(message.toLocaleLowerCase());
 const getSafetyResponse = (lang: Lang) => copy[lang].ariaSafetyBody;
-function getAIResponse(message: string, lang: Lang) {
+function getAIResponse(message: string, lang: Lang, history: ChatMessage[] = []) {
   const t = copy[lang];
   const normalized = message.toLocaleLowerCase();
   const mentionsAnxiety = /anxious|anxiety|panic|worry|worried|stress|بے چین|گھبراہٹ|فکر|تناؤ/.test(normalized);
   const mentionsSleep = /sleep|سونا|نیند|rest/.test(normalized);
   const mentionsSadness = /sad|empty|lonely|depressed|اداس|تنہا|خالی|مایوس/.test(normalized);
+  const mentionsStudy = /exam|study|student|class|assignment|test|امتحان|پڑھائی|طالب علم|کلاس|اسائنمنٹ/.test(normalized);
+  const mentionsWork = /work|job|office|boss|career|کام|نوکری|دفتر|باس|روزگار/.test(normalized);
+  const mentionsAnger = /angry|anger|frustrat|irritat|غصہ|ناراض|جھنجھلا|چڑچڑا/.test(normalized);
+  const mentionsConnection = /alone|lonely|friend|family|relationship|partner|اکیلا|تنہا|دوست|خاندان|رشتہ|ساتھی/.test(normalized);
+  const mentionsSelfCriticism = /failure|worthless|guilty|blame|not good enough|ناکام|بے کار|قصور|خود کو الزام|کافی اچھا/.test(normalized);
+  const isGreeting = /^(hi|hello|hey|salam|assalam|سلام|ہیلو|السلام علیکم)\b/.test(normalized.trim());
+  const previousAssistant = history.filter((chat) => chat.role === 'assistant').length;
+  const gentleQuestion = lang === 'ur'
+    ? 'اس وقت آپ کے لیے سب سے چھوٹا، قابلِ عمل قدم کیا ہو سکتا ہے؟'
+    : 'What feels like the smallest doable step from here?';
 
   if (lang === 'ur') {
+    if (isGreeting) return 'وعلیکم السلام۔ میں یہاں آپ کی بات سننے اور اسے تھوڑا آہستہ کرنے کے لیے ہوں۔ آج آپ کے ذہن میں سب سے نمایاں بات کیا ہے؟';
     if (mentionsAnxiety) return 'آپ کی بے چینی کو سنجیدگی سے لیا جا سکتا ہے۔ اپنے پاؤں زمین پر محسوس کریں، چار آہستہ سانسیں لیں، اور اپنے اردگرد کی تین چیزوں کے نام لیں۔ اس وقت آپ کے اختیار میں سب سے چھوٹی چیز کیا ہے؟';
     if (mentionsSleep) return 'نیند کے لیے ابھی سب کچھ حل کرنا ضروری نہیں۔ روشنی کم کریں، فون کچھ دیر دور رکھیں، اور اپنے جسم کو آہستہ آہستہ ڈھیلا ہونے دیں۔ کیا کوئی خیال بار بار واپس آ رہا ہے؟';
     if (mentionsSadness) return 'یہ احساس اکیلے اٹھانا مشکل ہو سکتا ہے۔ آپ کو ابھی خود سے سب کچھ ٹھیک کرنے کی ضرورت نہیں۔ کسی قابلِ اعتماد شخص کو ایک مختصر پیغام بھیجنا کیسا رہے گا؟';
+    if (mentionsStudy) return 'امتحان یا پڑھائی کا دباؤ واقعی بھاری لگ سکتا ہے۔ پورا کام ایک ساتھ اٹھانے کے بجائے صرف دس منٹ کا ایک حصہ چنیں، مثلاً ایک سوال یا ایک صفحہ۔ کیا ابھی آپ کو منصوبہ چاہیے یا پہلے ذہن ہلکا کرنا ہے؟';
+    if (mentionsWork) return 'کام یا نوکری کا دباؤ اکثر ذہن کو مسلسل چوکس رکھتا ہے۔ ایک لمحے کے لیے یہ الگ کریں کہ کیا فوری ہے اور کیا آج انتظار کر سکتا ہے۔ ' + gentleQuestion;
+    if (mentionsAnger) return 'غصہ اکثر اس بات کا اشارہ ہوتا ہے کہ کوئی حد، ضرورت یا ناانصافی نظر انداز ہوئی ہے۔ جواب دینے سے پہلے چند لمحے رک کر جسم میں غصے کی جگہ محسوس کریں۔ کیا آپ بتانا چاہیں گے کہ اصل تکلیف کس بات سے ہوئی؟';
+    if (mentionsConnection) return 'کسی سے جڑنے کی خواہش اور ساتھ ہی تنہائی محسوس کرنا بہت انسانی بات ہے۔ کسی قابلِ اعتماد شخص کو صرف اتنا لکھ سکتے ہیں: “آج بات کرنے کی ضرورت ہے۔” کیا کوئی ایسا شخص ذہن میں آ رہا ہے؟';
+    if (mentionsSelfCriticism) return 'اپنے آپ کو سخت الفاظ میں پرکھنا اس لمحے کو اور بھاری بنا سکتا ہے۔ جو بات آپ اپنے کسی دوست سے نرمی سے کہتے، وہی اپنے لیے بھی آزما کر دیکھیں۔ ' + gentleQuestion;
+    if (previousAssistant > 1) return 'میں آپ کی بات کے ساتھ ہوں۔ ہم اسے ایک ہی بار میں حل کرنے کے بجائے ایک حصے میں دیکھ سکتے ہیں۔ اس وقت سب سے زیادہ توجہ کس چیز کو چاہیے؟';
     return message.length > 90 ? t.ariaFallback2 : t.ariaFallback;
   }
 
+  if (isGreeting) return 'Hello. I am here to listen and help make the moment a little slower. What feels most present for you today?';
   if (mentionsAnxiety) return 'That sounds unsettling. Let us make this moment smaller: feel both feet on the floor, take four slow breaths, and name three things you can see. What is one small part of this situation that is within your control?';
   if (mentionsSleep) return 'You do not have to solve everything before resting. Lower the light, put your phone a little farther away, and notice where your body can soften. Is there one thought that keeps returning?';
   if (mentionsSadness) return 'That sounds heavy to carry alone. You do not need to fix the whole day right now. Would it feel possible to send one simple message to someone you trust?';
+  if (mentionsStudy) return 'Exam or study pressure can make the whole future feel urgent. Instead of carrying the entire task, choose a ten-minute piece — one question, one paragraph, or one outline. Do you need a small plan right now, or room to let the feeling out first?';
+  if (mentionsWork) return 'Work pressure can keep your mind on alert long after the workday ends. It may help to separate what is urgent from what can wait until tomorrow. ' + gentleQuestion;
+  if (mentionsAnger) return 'Anger can point to a crossed boundary, an unmet need, or something that felt unfair. Before responding, pause long enough to notice where it sits in your body. What part of the situation hurt underneath the anger?';
+  if (mentionsConnection) return 'Wanting connection while feeling alone can be especially painful. You could send someone you trust a low-pressure message: “I could use a little company today.” Is there anyone who feels safe enough to try?';
+  if (mentionsSelfCriticism) return 'The way we speak to ourselves can make a hard moment heavier. Try describing what happened as if you were speaking to a friend you care about, without turning it into a verdict about your worth. ' + gentleQuestion;
+  if (previousAssistant > 1) return 'I am still with you. We do not have to solve the whole situation in one conversation; we can stay with one part of it at a time. What needs the most attention right now?';
   return message.length > 90 ? t.ariaFallback2 : t.ariaFallback;
 }
 
@@ -456,7 +480,7 @@ function AriaPage({ lang, chats, mode, onModeChange, onSend, onClear }: { lang: 
       return;
     }
     responseTimer.current = setTimeout(() => {
-      onSend({ id: uid(), role: 'assistant', content: getAIResponse(content, lang), createdAt: now() });
+      onSend({ id: uid(), role: 'assistant', content: getAIResponse(content, lang, chats), createdAt: now() });
       setIsThinking(false);
       responseTimer.current = null;
     }, 320);

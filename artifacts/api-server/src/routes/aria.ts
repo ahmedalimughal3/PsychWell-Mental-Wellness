@@ -43,8 +43,12 @@ router.post("/aria/chat", async (req: Request, res: Response) => {
     return;
   }
 
-  const baseUrl = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
-  const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+  const managedBaseUrl = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+  const managedApiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+  const personalApiKey = process.env.OPENAI_API_KEY;
+  const usingManagedProvider = Boolean(managedBaseUrl && managedApiKey);
+  const baseUrl = managedBaseUrl || (personalApiKey ? "https://api.openai.com/v1" : undefined);
+  const apiKey = managedApiKey || personalApiKey;
   if (!baseUrl || !apiKey) {
     res.status(503).json({ error: "The real AI service is not configured." });
     return;
@@ -68,7 +72,7 @@ router.post("/aria/chat", async (req: Request, res: Response) => {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-5.6-terra",
+        model: usingManagedProvider ? "gpt-5.6-terra" : (process.env.OPENAI_MODEL || "gpt-4o-mini"),
         max_completion_tokens: 500,
         messages,
       }),
