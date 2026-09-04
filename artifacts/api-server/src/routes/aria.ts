@@ -43,13 +43,14 @@ router.post("/aria/chat", async (req: Request, res: Response) => {
     return;
   }
 
+  const geminiApiKey = process.env.GEMINI_API_KEY;
   const managedBaseUrl = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
   const managedApiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
   const personalApiKey = process.env.OPENAI_API_KEY;
   const usingManagedProvider = Boolean(managedBaseUrl && managedApiKey);
   const baseUrl = managedBaseUrl || (personalApiKey ? "https://api.openai.com/v1" : undefined);
   const apiKey = managedApiKey || personalApiKey;
-  if (!baseUrl || !apiKey) {
+  if (!geminiApiKey && (!baseUrl || !apiKey)) {
     res.status(503).json({ error: "The real AI service is not configured." });
     return;
   }
@@ -65,6 +66,45 @@ router.post("/aria/chat", async (req: Request, res: Response) => {
   ];
 
   try {
+    if (geminiApiKey) {
+      const upstream = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": geminiApiKey,
+        },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents: messages.slice(1).map(({ role, content }) => ({
+            role: role === "assistant" ? "model" : "user",
+            parts: [{ text: content }],
+          })),
+          generationConfig: { maxOutputTokens: 8192 },
+        }),
+      });
+      const payload = await upstream.json().catch(() => null) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+        error?: { message?: string; status?: string };
+      } | null;
+      const reply = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
+      if (!upstream.ok || !reply) {
+        console.error("Gemini request failed", {
+          statusCode: upstream.status,
+          providerStatus: payload?.error?.status,
+          message: payload?.error?.message,
+        });
+        res.status(502).json({ error: "The Gemini service returned no reply." });
+        return;
+      }
+      res.json({ reply, provider: "gemini" });
+      return;
+    }
+
+    if (!baseUrl || !apiKey) {
+      res.status(503).json({ error: "The real AI service is not configured." });
+      return;
+    }
+
     const upstream = await fetch(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
       method: "POST",
       headers: {
