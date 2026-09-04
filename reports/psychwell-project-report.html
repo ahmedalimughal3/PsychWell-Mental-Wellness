@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PsychWell — Project Report</title>
+  <style>
+    @page { size: A4; margin: 16mm 15mm 17mm; }
+    :root {
+      --ink: #193d3a;
+      --muted: #647875;
+      --cream: #f8f5ef;
+      --paper: #fffdfa;
+      --sage: #dfece4;
+      --green: #236154;
+      --gold: #d19d59;
+      --coral: #c87862;
+      --line: #d9e1da;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--cream);
+      font: 10.2pt/1.55 Arial, Helvetica, sans-serif;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1, h2, h3 { color: var(--ink); }
+    h1 { font: 700 34pt/1.05 Georgia, "Times New Roman", serif; letter-spacing: -.8px; }
+    h2 { font: 700 20pt/1.15 Georgia, "Times New Roman", serif; margin: 0 0 9px; }
+    h3 { font-size: 12pt; margin: 16px 0 5px; }
+    p { margin-bottom: 9px; }
+    a { color: var(--green); }
+    .page { break-after: page; }
+    .page:last-child { break-after: auto; }
+    .cover {
+      min-height: 255mm;
+      padding: 22mm 17mm;
+      color: #f8f6ef;
+      background:
+        radial-gradient(circle at 88% 18%, rgba(219, 173, 96, .25), transparent 19%),
+        radial-gradient(circle at 9% 88%, rgba(112, 171, 149, .18), transparent 22%),
+        var(--ink);
+      position: relative;
+      overflow: hidden;
+    }
+    .cover:after {
+      content: "";
+      position: absolute; width: 150mm; height: 150mm; right: -58mm; bottom: -63mm;
+      border: 1px solid rgba(240, 204, 135, .35); border-radius: 50%;
+      box-shadow: 0 0 0 10mm rgba(240, 204, 135, .08), 0 0 0 21mm rgba(240, 204, 135, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14pt; }
+    .brand-mark { width: 28px; height: 28px; border: 1px solid #efc879; border-radius: 50%; display: inline-block; position: relative; }
+    .brand-mark:before, .brand-mark:after { content: ""; position: absolute; inset: 6px; border: 1px solid #efc879; border-radius: 50%; }
+    .brand-mark:after { inset: 11px; background: #efc879; border: 0; }
+    .cover .eyebrow, .eyebrow { text-transform: uppercase; letter-spacing: 2px; font-size: 8pt; font-weight: 700; color: var(--coral); }
+    .cover .eyebrow { margin-top: 56mm; color: #efbd82; }
+    .cover h1 { color: #f8f6ef; max-width: 155mm; margin: 7px 0 15px; }
+    .cover-lead { color: #c3d1ca; font-size: 14pt; max-width: 137mm; }
+    .cover-meta { position: absolute; left: 17mm; bottom: 23mm; color: #b9c8c0; font-size: 9pt; }
+    .cover-meta strong { color: #f0c87b; display: block; margin-bottom: 3px; }
+    .section { padding: 1mm 2mm; }
+    .section-heading { border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 16px; }
+    .section-heading .eyebrow { margin-bottom: 5px; }
+    .lede { font-size: 13pt; line-height: 1.55; color: #34504b; }
+    .callout { border-left: 4px solid var(--gold); background: var(--sage); padding: 12px 14px; margin: 15px 0; }
+    .callout strong { color: var(--green); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .card { background: var(--paper); border: 1px solid var(--line); border-radius: 9px; padding: 12px; }
+    .card h3 { margin-top: 0; color: var(--green); }
+    .metric { font: 700 23pt Georgia, serif; color: var(--green); display: block; }
+    .metric-label { color: var(--muted); font-size: 8.6pt; }
+    ul { padding-left: 18px; margin: 6px 0 10px; }
+    li { margin: 4px 0; }
+    .table { width: 100%; border-collapse: collapse; background: var(--paper); border: 1px solid var(--line); margin: 10px 0 14px; }
+    .table th, .table td { padding: 8px 9px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+    .table th { background: var(--sage); color: var(--green); font-size: 8.5pt; text-transform: uppercase; letter-spacing: .7px; }
+    .table tr:last-child td { border-bottom: 0; }
+    .diagram { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; align-items: center; margin: 18px 0; }
+    .node { min-height: 56px; display: flex; align-items: center; justify-content: center; text-align: center; border: 1px solid #abc9bb; border-radius: 8px; padding: 7px; background: #f1f7f1; font-weight: 700; color: var(--green); }
+    .node.ai { background: #fff2e5; border-color: #e7c58f; }
+    .node.local { background: #e7f2ec; }
+    .arrow { text-align: center; color: var(--gold); font-size: 18pt; }
+    .code { font: 8.5pt/1.45 "Courier New", monospace; background: #183b39; color: #e7f1e9; border-radius: 7px; padding: 11px 13px; white-space: pre-wrap; }
+    .screenshot { width: 100%; display: block; border: 1px solid #cfd9d1; border-radius: 7px; background: white; }
+    figure { margin: 0 0 16px; break-inside: avoid; }
+    figcaption { color: var(--muted); font-size: 8.5pt; padding-top: 5px; }
+    .shot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .shot-grid figure { margin-bottom: 4px; }
+    .shot-grid .screenshot { max-height: 91mm; object-fit: cover; object-position: top; }
+    .status-ok { color: #287152; font-weight: 700; }
+    .status-note { color: #a16238; font-weight: 700; }
+    .footer { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 7px; color: var(--muted); font-size: 8pt; display: flex; justify-content: space-between; }
+    .rtl-note { direction: rtl; text-align: right; background: #f5eee5; border-right: 4px solid var(--coral); border-left: 0; }
+    .small { font-size: 8.7pt; color: var(--muted); }
+    .avoid-break { break-inside: avoid; }
+  </style>
+</head>
+<body>
+  <section class="cover page">
+    <div class="brand"><span class="brand-mark"></span><span>PsychWell</span></div>
+    <div class="eyebrow">Project Report · Browser-only Mental Wellness</div>
+    <h1>AI-powered mental health support with privacy at the center.</h1>
+    <p class="cover-lead">A bilingual English/Urdu web application for gentle check-ins, private journaling, self-screening, guided exercises, and supportive Dr. Aria conversations for people in Pakistan.</p>
+    <div class="cover-meta">
+      <strong>Prepared for project submission</strong>
+      Version 1.0 · 4 September 2026<br>
+      React + Vite · Local-first web application
+    </div>
+  </section>
+
+  <section class="page section">
+    <div class="section-heading"><div class="eyebrow">01 · Overview</div><h2>Executive summary</h2></div>
+    <p class="lede">PsychWell is a privacy-first mental wellness companion designed around a simple promise: everyday reflection should not require an account or surrendering personal thoughts to a cloud database.</p>
+    <p>The product combines a calm, editorial interface with practical wellness tools. A person can record a mood, write a journal entry, complete a self-check, try a guided exercise, search for support in Karachi, or talk with Dr. Aria. The default experience is browser-only and stores personal data in localStorage.</p>
+    <div class="callout"><strong>Core product principle:</strong> the user remains in control. The app makes local storage visible, offers a complete clear-data action, and explains that real AI mode sends messages away from the device only after explicit consent.</div>
+    <div class="grid-3">
+      <div class="card"><span class="metric">7</span><span class="metric-label">main navigation areas</span></div>
+      <div class="card"><span class="metric">6</span><span class="metric-label">self-assessment instruments</span></div>
+      <div class="card"><span class="metric">9</span><span class="metric-label">guided exercises</span></div>
+    </div>
+    <h3>Project objectives</h3>
+    <ul>
+      <li>Provide a low-friction, judgment-free place for daily mental wellness reflection.</li>
+      <li>Keep journal, mood, assessment, and chat history local by default.</li>
+      <li>Support both English and Urdu, including right-to-left Urdu layout.</li>
+      <li>Offer useful AI-assisted conversation without presenting it as diagnosis, therapy, or emergency care.</li>
+      <li>Make safety boundaries and crisis escalation visible for high-risk language.</li>
+    </ul>
+    <div class="footer"><span>PsychWell Project Report</span><span>01</span></div>
+  </section>
+
+  <section class="page section">
+    <div class="section-heading"><div class="eyebrow">02 · Product design</div><h2>Audience and experience</h2></div>
+    <div class="grid-2">
+      <div class="card"><h3>Target users</h3><p>People in Pakistan who want a private, lightweight way to notice moods, process thoughts, learn calming practices, or decide when professional support may be useful.</p><p class="small">The app is not intended to replace a qualified mental-health professional or emergency service.</p></div>
+      <div class="card"><h3>Design direction</h3><p>A quiet, editorial visual system uses deep green, warm cream, soft sage, and coral accents. Large serif headings create emotional space while compact cards keep practical actions easy to scan.</p></div>
+    </div>
+    <h3>Primary user journey</h3>
+    <table class="table">
+      <tr><th>Stage</th><th>User action</th><th>Product response</th></tr>
+      <tr><td>Welcome</td><td>Choose English or Urdu and begin gently.</td><td>Sets language and completes local onboarding.</td></tr>
+      <tr><td>Check-in</td><td>Select one of five mood states.</td><td>Stores the mood locally and updates the rhythm view.</td></tr>
+      <tr><td>Reflect</td><td>Write a journal page or speak with Dr. Aria.</td><td>Saves text locally; AI mode requires explicit consent.</td></tr>
+      <tr><td>Practice</td><td>Choose a self-check or guided exercise.</td><td>Shows progress, stores results, and avoids clinical claims.</td></tr>
+      <tr><td>Control</td><td>Switch language, review privacy, or clear data.</td><td>Applies preferences and removes all PsychWell local keys on confirmation.</td></tr>
+    </table>
+    <div class="callout rtl-note"><strong>اردو سپورٹ:</strong> ایپ میں اردو کا مکمل متن، RTL لے آؤٹ، اور مقامی زبان میں ڈاکٹر آریا کے حفاظتی پیغامات شامل ہیں۔</div>
+    <h3>Accessibility and interaction choices</h3>
+    <ul>
+      <li>Semantic buttons, labels, textareas, status messages, and live thinking feedback.</li>
+      <li>Responsive layouts for desktop and smaller screens.</li>
+      <li>Visible focusable controls and clear action states for saving, sending, clearing, and navigation.</li>
+      <li>Language direction is applied to both the document and the application shell.</li>
+    </ul>
+    <div class="footer"><span>PsychWell Project Report</span><span>02</span></div>
+  </section>
+
+  <section class="page section">
+    <div class="section-heading"><div class="eyebrow">03 · Functional scope</div><h2>Feature inventory</h2></div>
+    <table class="table">
+      <tr><th>Module</th><th>Implemented capability</th><th>Storage / behavior</th></tr>
+      <tr><td>Today dashboard</td><td>Daily mood check-in, recent rhythm chart, suggested exercise, privacy card.</td><td>Mood log is saved to browser localStorage.</td></tr>
+      <tr><td>Journal</td><td>Create entries with mood, main thought, optional reflection, history, delete action.</td><td>Entries and linked mood points remain on-device.</td></tr>
+      <tr><td>Dr. Aria</td><td>Supportive chat, offline responses, real-AI consent flow, thinking state, clear conversation.</td><td>Chat history is local; real mode sends only after consent.</td></tr>
+      <tr><td>Self-checks</td><td>GAD-7, PHQ-9, PSS-10, BFI-10, RSES, and SWLS flows with scoring and history.</td><td>Results are self-screening only and stored locally.</td></tr>
+      <tr><td>Exercises</td><td>Nine practices including breathing, grounding, gratitude, muscle release, visualization, reframing, tiny steps, self-compassion, and soft reset.</td><td>Guided step progress and an in-session timer.</td></tr>
+      <tr><td>Find support</td><td>Karachi-oriented search and area selector with verification warning.</td><td>Intentionally incomplete placeholder until listings are verified.</td></tr>
+      <tr><td>Settings</td><td>English/Urdu switch, privacy explanation, about panel, clear-all-data action.</td><td>Clear action removes all keys beginning with psychwell_.</td></tr>
+    </table>
+    <h3>Self-assessment coverage</h3>
+    <div class="grid-2">
+      <div class="card"><h3>Symptoms and stress</h3><ul><li>GAD-7 anxiety symptoms</li><li>PHQ-9 mood and functioning</li><li>PSS-10 perceived stress</li></ul></div>
+      <div class="card"><h3>Traits and wellbeing</h3><ul><li>BFI-10 personality tendencies</li><li>RSES self-esteem</li><li>SWLS life satisfaction</li></ul></div>
+    </div>
+    <p class="small">All questionnaires are presented as reflective self-screening tools. The UI explicitly states that a score is not a diagnosis and encourages qualified support when concerns persist.</p>
+    <div class="footer"><span>PsychWell Project Report</span><span>03</span></div>
+  </section>
+
+  <section class="page section">
+    <div class="section-heading"><div class="eyebrow">04 · AI implementation</div><h2>Dr. Aria conversation architecture</h2></div>
+    <p>Dr. Aria has two clearly separated modes. Offline reflection is the default and keeps messages on-device. Real AI is an opt-in path with a consent explanation that tells the user their messages will leave the device.</p>
+    <div class="diagram">
+      <div class="node local">React chat UI<br>English / Urdu</div><div class="arrow">→</div><div class="node local">Offline mode<br>deterministic reflection</div>
+      <div class="node">Consent panel<br>explicit opt-in</div><div class="arrow">→</div><div class="node ai">POST /api/aria/chat<br>server-side provider call</div>
+    </div>
+    <h3>Server-side safety controls</h3>
+    <ul>
+      <li>Message length is validated at the API boundary, with a 1–1200 character limit.</li>
+      <li>History is filtered to valid user/assistant turns and capped to the last 12 turns.</li>
+      <li>The system instruction tells the model to be warm and CBT-grounded without diagnosing, prescribing, or claiming emergency-care capability.</li>
+      <li>English and Urdu prompts are selected from the requested language.</li>
+      <li>Crisis language is detected before an upstream call and receives a human-support escalation message instead.</li>
+      <li>Provider credentials stay server-side; the browser sends the conversation to the app route, not a provider key.</li>
+    </ul>
+    <h3>Provider activation status</h3>
+    <div class="callout"><strong>Integrated but not activated in this environment:</strong> the real-AI API route and consent UX are present. Replit-managed OpenAI provisioning requested an account upgrade, and no personal OpenAI API key was provided. Therefore the report does not claim a live upstream completion; offline reflection remains the safe working default.</div>
+    <div class="code">POST /api/aria/chat
+{
+  "message": "I feel anxious about an upcoming exam.",
+  "language": "en",
+  "history": []
+}
+
+Response shape:
+{ "reply": "Supportive mental-health reflection..." }</div>
+    <div class="footer"><span>PsychWell Project Report</span><span>04</span></div>
+  </section>
+
+  <section class="page section">
+    <div class="section-heading"><div class="eyebrow">05 · Privacy and engineering</div><h2>Data model and technical stack</h2></div>
+    <div class="grid-2">
+      <div class="card"><h3>Frontend</h3><ul><li>React 19 with TypeScript</li><li>Vite 7 build and development server</li><li>Wouter path-based navigation</li><li>Lucide icons and custom CSS design system</li><li>Responsive, bilingual component structure</li></ul></div>
+      <div class="card"><h3>Backend</h3><ul><li>Express API server</li><li>Health endpoint at /api/healthz</li><li>Dr. Aria endpoint at /api/aria/chat</li><li>Server-side provider access</li><li>Explicit 4xx/5xx configuration errors</li></ul></div>
+    </div>
+    <h3>Local storage keys</h3>
+    <table class="table">
+      <tr><th>Key group</th><th>Purpose</th></tr>
+      <tr><td>psychwell_settings / profile</td><td>Language, onboarding completion, and selected Dr. Aria mode.</td></tr>
+      <tr><td>psychwell_moods</td><td>Timestamped mood check-ins for the dashboard rhythm chart.</td></tr>
+      <tr><td>psychwell_journals</td><td>Journal text, mood, optional reflection, and timestamp.</td></tr>
+      <tr><td>psychwell_chats</td><td>Dr. Aria conversation history saved in the current browser.</td></tr>
+      <tr><td>psychwell_assessment_results</td><td>Self-check scores, bands, answers, and timestamps.</td></tr>
+    </table>
+    <h3>Privacy boundary</h3>
+    <p>By default, there is no account, database, analytics pipeline, camera flow, or microphone flow. The browser stores local state. If the user explicitly chooses real AI mode, the latest chat history and current message are sent to the app's server route for provider processing, while the local copy remains in the browser.</p>
+    <div class="callout"><strong>Clear-data behavior:</strong> the Settings page confirms the destructive action and removes PsychWell local storage keys. The user can return to onboarding after the wipe.</div>
+    <div class="footer"><span>PsychWell Project Report</span><span>05</span></div>
+  </section>
+
+  <section class="page section">
+    <div class="section-heading"><div class="eyebrow">06 · Validation</div><h2>Testing and verification</h2></div>
+    <table class="table">
+      <tr><th>Check</th><th>Result</th><th>Notes</th></tr>
+      <tr><td>TypeScript typecheck</td><td class="status-ok">Passed</td><td>PsychWell typecheck completed without reported type errors.</td></tr>
+      <tr><td>Production build</td><td class="status-ok">Passed</td><td>Vite build works without requiring Replit-only PORT or BASE_PATH values.</td></tr>
+      <tr><td>Web workflow</td><td class="status-ok">Running</td><td>PsychWell preview served by Vite on the configured artifact port.</td></tr>
+      <tr><td>API health</td><td class="status-ok">Passed</td><td>GET /api/healthz returned { status: "ok" }.</td></tr>
+      <tr><td>Offline Dr. Aria</td><td class="status-ok">Passed</td><td>Sample anxiety message produced a contextual mental-health reflection locally.</td></tr>
+      <tr><td>Real AI provider</td><td class="status-note">Pending provider access</td><td>Route returns a clear configuration error when managed provisioning or an API key is unavailable.</td></tr>
+      <tr><td>Browser console</td><td class="status-ok">Clean</td><td>Only normal Vite connection and React DevTools informational logs observed.</td></tr>
+    </table>
+    <h3>Known limitation and next activation step</h3>
+    <p>Real AI conversations are implemented behind an explicit privacy choice, but the current workspace declined the managed AI account upgrade and did not provide an OpenAI secret. To activate the upstream mode, provision the managed OpenAI integration or add an OpenAI API key through Replit Secrets; no key should be pasted into chat or committed to the repository.</p>
+    <h3>Deployment readiness</h3>
+    <ul>
+      <li>Vercel configuration is included for the static PsychWell artifact.</li>
+      <li>Use <strong>artifacts/psychwell</strong> as the Vercel project root.</li>
+      <li>Build command: <strong>pnpm run build</strong>.</li>
+      <li>Output directory: <strong>dist/public</strong>.</li>
+      <li>SPA rewrite routes are included so application paths load correctly.</li>
+    </ul>
+    <div class="footer"><span>PsychWell Project Report</span><span>06</span></div>
+  </section>
+
+  <section class="page section">
+    <div class="section-heading"><div class="eyebrow">07 · Screenshots</div><h2>Application evidence</h2></div>
+    <p class="small">The following screenshots were captured from the running PsychWell preview using an isolated browser session with onboarding completed for demonstration. No personal user data was used.</p>
+    <div class="shot-grid">
+      <figure><img class="screenshot" src="../screenshots/psychwell-dashboard.jpg" alt="PsychWell dashboard"><figcaption>Figure 1. Today dashboard with mood check-in, rhythm snapshot, suggestion, and privacy card.</figcaption></figure>
+      <figure><img class="screenshot" src="../screenshots/psychwell-aria-chat.jpg" alt="Dr Aria chat"><figcaption>Figure 2. Dr. Aria conversation with a contextual anxiety reflection in offline mode.</figcaption></figure>
+      <figure><img class="screenshot" src="../screenshots/psychwell-journal.jpg" alt="PsychWell journal"><figcaption>Figure 3. Private journal area for mood-linked entries and reflections.</figcaption></figure>
+      <figure><img class="screenshot" src="../screenshots/psychwell-assessments.jpg" alt="PsychWell assessments"><figcaption>Figure 4. Self-check library with six reflective assessment instruments.</figcaption></figure>
+    </div>
+    <div class="footer"><span>PsychWell Project Report</span><span>07</span></div>
+  </section>
+
+  <section class="page section">
+    <div class="section-heading"><div class="eyebrow">08 · Screenshots</div><h2>Application evidence continued</h2></div>
+    <div class="shot-grid">
+      <figure><img class="screenshot" src="../screenshots/psychwell-exercises.jpg" alt="PsychWell exercises"><figcaption>Figure 5. Guided exercise library for calming, grounding, reframing, and self-compassion.</figcaption></figure>
+      <figure><img class="screenshot" src="../screenshots/psychwell-specialists.jpg" alt="PsychWell support directory"><figcaption>Figure 6. Karachi support directory placeholder with verification notice and search controls.</figcaption></figure>
+      <figure><img class="screenshot" src="../screenshots/psychwell-settings.jpg" alt="PsychWell settings"><figcaption>Figure 7. Settings page with language, privacy explanation, and clear-all-data control.</figcaption></figure>
+      <figure><img class="screenshot" src="../screenshots/psychwell-home.jpg" alt="PsychWell onboarding"><figcaption>Figure 8. Welcome screen communicating the local-only, no-account product promise.</figcaption></figure>
+    </div>
+    <div class="callout"><strong>Conclusion:</strong> PsychWell delivers a complete local-first wellness experience with bilingual support, transparent privacy controls, safety-aware Dr. Aria behavior, and a clearly separated path for optional real AI activation.</div>
+    <div class="footer"><span>PsychWell Project Report</span><span>08</span></div>
+  </section>
+</body>
+</html>

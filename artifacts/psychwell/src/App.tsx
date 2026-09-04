@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import {
   ArrowLeft, ArrowRight, ArrowUpRight, BarChart3, BookOpen, Brain, Check, ChevronDown, CircleHelp,
   Clock3, Compass, Heart, Home as HomeIcon, Info, Leaf, LockKeyhole, Menu, MessageCircle,
-  PenLine, Play, RotateCcw, Search, Send, Settings as SettingsIcon,
+  PenLine, Phone as PhoneIcon, Play, RotateCcw, Search, Send, Settings as SettingsIcon,
   ShieldCheck, Sparkles, Star, Trash2, Wind, X, Zap,
 } from 'lucide-react';
 
@@ -15,7 +15,8 @@ type JournalEntry = { id: string; createdAt: string; mood: Mood; text: string; r
 type MoodLog = { id: string; createdAt: string; mood: Mood };
 type ChatMessage = { id: string; role: Role; content: string; createdAt: string };
 type AssessmentResult = { id: string; assessmentId: string; score: number; band: string; createdAt: string; answers: number[] };
-type Settings = { language: Lang; onboarded: boolean };
+type AriaMode = 'offline' | 'real';
+type Settings = { language: Lang; onboarded: boolean; ariaMode: AriaMode };
 
 const KEY = {
   settings: 'psychwell_settings', profile: 'psychwell_profile', journals: 'psychwell_journals',
@@ -33,13 +34,13 @@ const copy = {
     appName: 'PsychWell', mark: 'a private pause for your mind',
     nav: { home: 'Today', journal: 'Journal', aria: 'Dr. Aria', assessments: 'Self-checks', exercises: 'Exercises', specialists: 'Find support', settings: 'Settings' },
     welcomeTitle: 'A quieter place to meet yourself.', welcomeBody: 'PsychWell is a private, browser-only space for small check-ins, honest pages, and steadier days. Nothing leaves this device.', begin: 'Begin gently', chooseLanguage: 'Choose your language', english: 'English', urdu: 'اردو', welcomeFoot: 'No account. No cloud. No judgement.',
-    goodMorning: 'Good to see you.', morningNote: 'A small check-in can change the shape of a day.', checkin: 'How are you arriving today?', checkinHint: 'There is no right answer. Choose what feels closest.', saved: 'Saved on this device', savedShort: 'Saved locally', privacyTitle: 'Your thoughts stay yours.', privacyBody: 'PsychWell stores everything in this browser’s local storage. We do not send your journal, moods, or conversations anywhere.', learnMore: 'See privacy settings',
+    goodMorning: 'Good to see you.', morningNote: 'A small check-in can change the shape of a day.', checkin: 'How are you arriving today?', checkinHint: 'There is no right answer. Choose what feels closest.', saved: 'Saved on this device', savedShort: 'Saved locally', privacyTitle: 'Your thoughts stay yours.', privacyBody: 'PsychWell keeps your journal, moods, and conversations in this browser by default. Dr. Aria only sends messages away from this device if you choose real AI mode.', learnMore: 'See privacy settings',
     recent: 'Your recent rhythm', noMoods: 'Your rhythm will appear here', noMoodsBody: 'A few daily check-ins make patterns easier to notice — without turning you into a number.', suggested: 'A gentle suggestion', basedOn: 'Based on your latest check-in', openExercise: 'Try this exercise', latest: 'Latest',
     journalTitle: 'A page for what is here.', journalBody: 'Write without editing yourself. This space is only for you.', newEntry: 'New entry', mood: 'Mood', entryText: 'What is on your mind?', entryPlaceholder: 'Let the page hold the unfinished thought…', reflection: 'A little reflection (optional)', reflectionPlaceholder: 'What might you need next?', saveEntry: 'Save entry', cancel: 'Cancel', history: 'Your pages', emptyJournal: 'Your first page is waiting.', emptyJournalBody: 'There is no perfect way to begin. Start with one honest sentence.', trend: 'Mood over time', entries: 'entries', entrySaved: 'Entry saved', delete: 'Delete', confirmDelete: 'Remove this page from this device?', today: 'Today',
-    ariaTitle: 'A thoughtful conversation.', ariaBody: 'Dr. Aria can help you slow down, name what is happening, and find a next small step.', ariaDisclaimer: 'Dr. Aria is a supportive reflection tool, not a licensed therapist or a crisis substitute. If you may be in immediate danger, contact local emergency services or a trusted person nearby. In Pakistan, you can also seek a hospital emergency department or a local mental-health service.', chatEmpty: 'You can start with whatever feels easiest.', chatEmptyBody: 'Try “I have been feeling stretched thin” or simply say hello.', inputPlaceholder: 'Write what is on your mind…', send: 'Send', ariaFallback: 'Thank you for trusting this space with that. I’m here to help you slow it down. What part feels heaviest right now — your thoughts, your body, or what is happening around you?', ariaFallback2: 'That sounds like a lot to carry alone. Could we look for one small, kind thing that might make the next ten minutes easier?', clearChat: 'Clear conversation', chatCleared: 'Conversation cleared',
+    ariaTitle: 'A thoughtful conversation.', ariaBody: 'Dr. Aria can help you slow down, name what is happening, and find a next small step.', ariaDisclaimer: 'Dr. Aria is a supportive reflection tool, not a licensed therapist or a crisis substitute. If you may be in immediate danger, contact local emergency services or a trusted person nearby. In Pakistan, you can also seek a hospital emergency department or a local mental-health service.', chatEmpty: 'You can start with whatever feels easiest.', chatEmptyBody: 'Try “I have been feeling stretched thin” or simply say hello.', inputPlaceholder: 'Write what is on your mind…', send: 'Send', ariaFallback: 'Thank you for trusting this space with that. I’m here to help you slow it down. What part feels heaviest right now — your thoughts, your body, or what is happening around you?', ariaFallback2: 'That sounds like a lot to carry alone. Could we look for one small, kind thing that might make the next ten minutes easier?', clearChat: 'Clear conversation', chatCleared: 'Conversation cleared', ariaModeLabel: 'Conversation mode', ariaOfflineMode: 'Offline reflection', ariaOfflineDetail: 'Private-first. Replies are generated on this device and your messages stay here.', ariaRealMode: 'Real AI', ariaRealDetail: 'More personal replies, using a secure AI service.', ariaEnable: 'Enable real AI', ariaKeepOffline: 'Keep offline mode', ariaConsentTitle: 'Choose where your messages go.', ariaConsentBody: 'Real AI mode sends your Dr. Aria messages and recent conversation to an AI service to generate a reply. This can make responses more personal, but those messages leave this device. Your local chat history stays in this browser.', ariaConsentCheck: 'I understand that messages will leave this device.', ariaConsentConfirm: 'Enable real AI', ariaPrivacyActive: 'Real AI is on. Messages sent now leave this device; your chat history is still saved locally.', ariaOfflineActive: 'Offline mode is on. Messages stay on this device and no network request is made.', ariaNetworkError: 'The AI service could not be reached. Your message is still saved here. You can keep talking offline or try again later.', ariaSwitchOffline: 'Switch to offline', ariaSafetyTitle: 'You may need immediate human support.', ariaSafetyBody: 'If you might hurt yourself or someone else, or cannot stay safe, call local emergency services now and move near a trusted person. In Pakistan, go to a hospital emergency department or contact a local mental-health service. Dr. Aria cannot provide crisis care.', ariaSafetyAck: 'Safety guidance shown',
     assessmentsTitle: 'Self-checks for noticing.', assessmentsBody: 'Short, established questionnaires can help you put words to patterns. They are self-screening tools, never a diagnosis.', take: 'Take self-check', questions: 'questions', lastTaken: 'Last taken', noResults: 'No self-checks yet', noResultsBody: 'Choose a questionnaire when you are ready. Your results remain on this device.', result: 'Result', selfScreening: 'Self-screening only — not a diagnosis.', back: 'Back', next: 'Next', seeResult: 'See my result', questionOf: 'Question {n} of {total}', score: 'Score', retake: 'Take again', resultSaved: 'Result saved locally', notClinical: 'This result is a starting point for reflection, not a clinical conclusion. Consider speaking with a qualified professional if concerns persist.',
     exercisesTitle: 'Small practices, real moments.', exercisesBody: 'Evidence-informed ways to settle, shift perspective, or reconnect with what matters.', minutes: 'min', steps: 'steps', start: 'Start practice', step: 'Step', finish: 'Finish practice', done: 'Practice complete', breatheIn: 'Breathe in', hold: 'Hold', breatheOut: 'Breathe out', pause: 'Pause', reset: 'Reset timer',
-    specialistsTitle: 'Finding support in Karachi.', specialistsBody: 'A starting point for your search — not a verified referral service.', searchPlaceholder: 'Search by area or support type', allAreas: 'All areas', directoryNote: 'This directory is intentionally incomplete while entries are being verified. Please confirm credentials, availability, fees, and contact details directly before sharing personal information.', noSpecialists: 'No verified listings yet', noSpecialistsBody: 'Use this space as a ready-to-search directory while you verify a local service you trust.', verify: 'Please verify details', placeholderTag: 'Placeholder / incomplete',
+    specialistsTitle: 'Finding support in Karachi.', specialistsBody: 'A practical starting point for finding local and tele-mental health support.', searchPlaceholder: 'Search by name, area, or support type', allAreas: 'All areas', directoryNote: 'These options are collected from public organization websites. Please verify credentials, availability, fees, and contact details directly before sharing personal information.', noSpecialists: 'No support options match', noSpecialistsBody: 'Try a different area or search term. For immediate danger, go to the nearest hospital emergency department.', verify: 'Verify details before contacting', officialSource: 'Official source', viewWebsite: 'Open website', callSupport: 'Call', hours: 'Hours', address: 'Location', results: 'support options', areaDha: 'DHA', areaKorangi: 'Korangi', areaKeamari: 'Keamari', areaNazimabad: 'Nazimabad', areaNorthNazimabad: 'North Nazimabad', placeholderTag: 'Public source · verify current details',
     settingsTitle: 'A space that stays with you.', language: 'Language', languageBody: 'Choose how PsychWell speaks with you.', privacy: 'Privacy, in plain language', clearData: 'Clear all PsychWell data', clearDataHint: 'This cannot be undone.', clearConfirm: 'Clear all local data? Your pages, moods, conversations, and results will be removed from this browser.', cleared: 'Local data cleared', about: 'About PsychWell', aboutBody: 'A quiet personal space for people in Pakistan to think, check in, and care for themselves — in English or Urdu.', version: 'Browser-only edition · 1.0', close: 'Close',
     errorTitle: 'The page took a quiet pause.', errorBody: 'Try returning to Today.', goHome: 'Return to Today',
   },
@@ -47,13 +48,13 @@ const copy = {
     appName: 'سائیک ویل', mark: 'آپ کے ذہن کے لیے ایک نجی وقفہ',
     nav: { home: 'آج', journal: 'جرنل', aria: 'ڈاکٹر آریا', assessments: 'خود جانچ', exercises: 'مشقیں', specialists: 'مدد تلاش کریں', settings: 'ترتیبات' },
     welcomeTitle: 'اپنے آپ سے ملنے کی ایک پُرسکون جگہ۔', welcomeBody: 'سائیک ویل چھوٹے چیک اِن، سچے صفحات اور بہتر دنوں کے لیے ایک نجی، براؤزر تک محدود جگہ ہے۔ کچھ بھی اس ڈیوائس سے باہر نہیں جاتا۔', begin: 'نرمی سے شروع کریں', chooseLanguage: 'اپنی زبان منتخب کریں', english: 'English', urdu: 'اردو', welcomeFoot: 'کوئی اکاؤنٹ نہیں۔ کوئی کلاؤڈ نہیں۔ کوئی فیصلہ نہیں۔',
-    goodMorning: 'آپ کو دیکھ کر خوشی ہوئی۔', morningNote: 'ایک چھوٹا سا چیک اِن دن کا رخ بدل سکتا ہے۔', checkin: 'آپ آج کیسا محسوس کر رہے ہیں؟', checkinHint: 'کوئی درست جواب نہیں۔ جو قریب لگے اسے چنیں۔', saved: 'اس ڈیوائس پر محفوظ', savedShort: 'مقامی طور پر محفوظ', privacyTitle: 'آپ کے خیالات آپ کے ہیں۔', privacyBody: 'سائیک ویل ہر چیز اسی براؤزر کے لوکل اسٹوریج میں محفوظ کرتا ہے۔ آپ کا جرنل، موڈ یا گفتگو کہیں نہیں بھیجی جاتی۔', learnMore: 'پرائیویسی ترتیبات دیکھیں',
+    goodMorning: 'آپ کو دیکھ کر خوشی ہوئی۔', morningNote: 'ایک چھوٹا سا چیک اِن دن کا رخ بدل سکتا ہے۔', checkin: 'آپ آج کیسا محسوس کر رہے ہیں؟', checkinHint: 'کوئی درست جواب نہیں۔ جو قریب لگے اسے چنیں۔', saved: 'اس ڈیوائس پر محفوظ', savedShort: 'مقامی طور پر محفوظ', privacyTitle: 'آپ کے خیالات آپ کے ہیں۔', privacyBody: 'سائیک ویل آپ کا جرنل، موڈ اور گفتگو بطور ڈیفالٹ اسی براؤزر میں محفوظ کرتا ہے۔ ڈاکٹر آریا کے پیغامات صرف آپ کی اجازت سے ڈیوائس سے باہر جاتے ہیں۔', learnMore: 'پرائیویسی ترتیبات دیکھیں',
     recent: 'آپ کی حالیہ کیفیت', noMoods: 'آپ کی کیفیت یہاں ظاہر ہوگی', noMoodsBody: 'روزانہ چند چیک اِن پیٹرن سمجھنے میں مدد دیتے ہیں — آپ کو کسی نمبر میں بدلے بغیر۔', suggested: 'ایک نرم مشورہ', basedOn: 'آپ کے تازہ چیک اِن کی بنیاد پر', openExercise: 'یہ مشق آزمائیں', latest: 'تازہ ترین',
     journalTitle: 'جو کچھ یہاں ہے، اس کے لیے ایک صفحہ۔', journalBody: 'بغیر ترمیم کے لکھیں۔ یہ جگہ صرف آپ کے لیے ہے۔', newEntry: 'نیا اندراج', mood: 'موڈ', entryText: 'آپ کے ذہن میں کیا ہے؟', entryPlaceholder: 'نامکمل خیال کو صفحہ سنبھالنے دیں…', reflection: 'تھوڑا سا غور (اختیاری)', reflectionPlaceholder: 'اب آپ کو کس چیز کی ضرورت ہو سکتی ہے؟', saveEntry: 'اندراج محفوظ کریں', cancel: 'منسوخ', history: 'آپ کے صفحات', emptyJournal: 'آپ کا پہلا صفحہ منتظر ہے۔', emptyJournalBody: 'شروع کرنے کا کوئی کامل طریقہ نہیں۔ ایک سچا جملہ لکھیں۔', trend: 'وقت کے ساتھ موڈ', entries: 'اندراجات', entrySaved: 'اندراج محفوظ ہوگیا', delete: 'حذف کریں', confirmDelete: 'کیا اس صفحے کو اس ڈیوائس سے ہٹانا ہے؟', today: 'آج',
-    ariaTitle: 'ایک سمجھدار گفتگو۔', ariaBody: 'ڈاکٹر آریا آپ کو ٹھہرنے، ہونے والی بات کو نام دینے اور اگلا چھوٹا قدم تلاش کرنے میں مدد دے سکتی ہیں۔', ariaDisclaimer: 'ڈاکٹر آریا ایک معاون غور و فکر کا آلہ ہے، لائسنس یافتہ تھراپسٹ یا بحران کا متبادل نہیں۔ اگر آپ فوری خطرے میں ہوں تو مقامی ہنگامی خدمات یا کسی قابلِ اعتماد قریبی شخص سے رابطہ کریں۔ پاکستان میں ہسپتال کے ایمرجنسی ڈیپارٹمنٹ یا مقامی ذہنی صحت کی سروس سے بھی مدد لیں۔', chatEmpty: 'آپ جس بات سے آسانی ہو، وہیں سے شروع کریں۔', chatEmptyBody: 'مثلاً لکھیں: “میں بہت تھکا ہوا محسوس کر رہا ہوں” یا صرف سلام کہیں۔', inputPlaceholder: 'اپنے ذہن کی بات لکھیں…', send: 'بھیجیں', ariaFallback: 'اس جگہ پر بھروسا کرنے کے لیے شکریہ۔ آئیے اسے آہستہ کرتے ہیں۔ اس وقت سب سے بھاری کیا لگ رہا ہے — آپ کے خیالات، جسم، یا اردگرد کی صورتحال؟', ariaFallback2: 'یہ اکیلے اٹھانا واقعی مشکل لگتا ہے۔ کیا ہم ایک ایسی چھوٹی اور مہربان چیز ڈھونڈ سکتے ہیں جو اگلے دس منٹ آسان بنا دے؟', clearChat: 'گفتگو صاف کریں', chatCleared: 'گفتگو صاف ہوگئی',
+    ariaTitle: 'ایک سمجھدار گفتگو۔', ariaBody: 'ڈاکٹر آریا آپ کو ٹھہرنے، ہونے والی بات کو نام دینے اور اگلا چھوٹا قدم تلاش کرنے میں مدد دے سکتی ہیں۔', ariaDisclaimer: 'ڈاکٹر آریا ایک معاون غور و فکر کا آلہ ہے، لائسنس یافتہ تھراپسٹ یا بحران کا متبادل نہیں۔ اگر آپ فوری خطرے میں ہوں تو مقامی ہنگامی خدمات یا کسی قابلِ اعتماد قریبی شخص سے رابطہ کریں۔ پاکستان میں ہسپتال کے ایمرجنسی ڈیپارٹمنٹ یا مقامی ذہنی صحت کی سروس سے بھی مدد لیں۔', chatEmpty: 'آپ جس بات سے آسانی ہو، وہیں سے شروع کریں۔', chatEmptyBody: 'مثلاً لکھیں: “میں بہت تھکا ہوا محسوس کر رہا ہوں” یا صرف سلام کہیں۔', inputPlaceholder: 'اپنے ذہن کی بات لکھیں…', send: 'بھیجیں', ariaFallback: 'اس جگہ پر بھروسا کرنے کے لیے شکریہ۔ آئیے اسے آہستہ کرتے ہیں۔ اس وقت سب سے بھاری کیا لگ رہا ہے — آپ کے خیالات، جسم، یا اردگرد کی صورتحال؟', ariaFallback2: 'یہ اکیلے اٹھانا واقعی مشکل لگتا ہے۔ کیا ہم ایک ایسی چھوٹی اور مہربان چیز ڈھونڈ سکتے ہیں جو اگلے دس منٹ آسان بنا دے؟', clearChat: 'گفتگو صاف کریں', chatCleared: 'گفتگو صاف ہوگئی', ariaModeLabel: 'گفتگو کا طریقہ', ariaOfflineMode: 'آف لائن غور', ariaOfflineDetail: 'رازداری پہلے۔ جوابات اسی ڈیوائس پر بنتے ہیں اور پیغامات یہیں رہتے ہیں۔', ariaRealMode: 'حقیقی اے آئی', ariaRealDetail: 'محفوظ اے آئی سروس سے زیادہ ذاتی جوابات۔', ariaEnable: 'حقیقی اے آئی آن کریں', ariaKeepOffline: 'آف لائن طریقہ رکھیں', ariaConsentTitle: 'چنیں کہ آپ کے پیغامات کہاں جائیں گے۔', ariaConsentBody: 'حقیقی اے آئی طریقہ جواب بنانے کے لیے آپ کے ڈاکٹر آریا پیغامات اور حالیہ گفتگو اے آئی سروس کو بھیجتا ہے۔ اس سے جوابات زیادہ ذاتی ہو سکتے ہیں، لیکن پیغامات اس ڈیوائس سے باہر جاتے ہیں۔ آپ کی مقامی گفتگو اسی براؤزر میں محفوظ رہتی ہے۔', ariaConsentCheck: 'میں سمجھتا ہوں کہ پیغامات اس ڈیوائس سے باہر جائیں گے۔', ariaConsentConfirm: 'حقیقی اے آئی آن کریں', ariaPrivacyActive: 'حقیقی اے آئی آن ہے۔ اب بھیجے گئے پیغامات اس ڈیوائس سے باہر جائیں گے؛ گفتگو پھر بھی مقامی طور پر محفوظ رہے گی۔', ariaOfflineActive: 'آف لائن طریقہ آن ہے۔ پیغامات اسی ڈیوائس پر رہتے ہیں اور کوئی نیٹ ورک درخواست نہیں ہوتی۔', ariaNetworkError: 'اے آئی سروس تک رسائی نہیں ہو سکی۔ آپ کا پیغام یہاں محفوظ ہے۔ آپ آف لائن بات جاری رکھ سکتے ہیں یا بعد میں دوبارہ کوشش کریں۔', ariaSwitchOffline: 'آف لائن پر جائیں', ariaSafetyTitle: 'آپ کو فوری انسانی مدد کی ضرورت ہو سکتی ہے۔', ariaSafetyBody: 'اگر آپ خود کو یا کسی اور کو نقصان پہنچا سکتے ہیں، یا محفوظ نہیں رہ سکتے، تو ابھی مقامی ہنگامی خدمات کو کال کریں اور کسی قابلِ اعتماد شخص کے قریب جائیں۔ پاکستان میں ہسپتال کے ایمرجنسی ڈیپارٹمنٹ جائیں یا مقامی ذہنی صحت کی سروس سے رابطہ کریں۔ ڈاکٹر آریا بحران میں مدد نہیں دے سکتی۔', ariaSafetyAck: 'حفاظتی رہنمائی دکھائی گئی',
     assessmentsTitle: 'غور کے لیے خود جانچ۔', assessmentsBody: 'مختصر اور مستند سوالنامے آپ کو پیٹرن کے لیے الفاظ ڈھونڈنے میں مدد دے سکتے ہیں۔ یہ تشخیص نہیں ہیں۔', take: 'خود جانچ شروع کریں', questions: 'سوالات', lastTaken: 'آخری بار', noResults: 'ابھی کوئی خود جانچ نہیں', noResultsBody: 'جب تیار ہوں، ایک سوالنامہ چنیں۔ نتائج اسی ڈیوائس پر رہتے ہیں۔', result: 'نتیجہ', selfScreening: 'صرف خود جانچ — تشخیص نہیں۔', back: 'واپس', next: 'اگلا', seeResult: 'نتیجہ دیکھیں', questionOf: 'سوال {n} از {total}', score: 'اسکور', retake: 'دوبارہ کریں', resultSaved: 'نتیجہ مقامی طور پر محفوظ ہوگیا', notClinical: 'یہ نتیجہ غور و فکر کا آغاز ہے، طبی نتیجہ نہیں۔ اگر پریشانی برقرار رہے تو کسی قابلِ اعتماد ماہر سے بات کرنے پر غور کریں۔',
     exercisesTitle: 'چھوٹی مشقیں، حقیقی لمحے۔', exercisesBody: 'پرسکون ہونے، نقطۂ نظر بدلنے یا اہم چیزوں سے دوبارہ جڑنے کے لیے شواہد پر مبنی طریقے۔', minutes: 'منٹ', steps: 'مراحل', start: 'مشق شروع کریں', step: 'مرحلہ', finish: 'مشق مکمل کریں', done: 'مشق مکمل ہوگئی', breatheIn: 'سانس اندر', hold: 'روکیں', breatheOut: 'سانس باہر', pause: 'وقفہ', reset: 'ٹائمر ری سیٹ',
-    specialistsTitle: 'کراچی میں مدد تلاش کرنا۔', specialistsBody: 'تلاش کے لیے ایک آغاز — تصدیق شدہ ریفرل سروس نہیں۔', searchPlaceholder: 'علاقے یا مدد کی قسم سے تلاش کریں', allAreas: 'تمام علاقے', directoryNote: 'یہ ڈائریکٹری جان بوجھ کر نامکمل ہے کیونکہ اندراجات کی تصدیق جاری ہے۔ ذاتی معلومات دینے سے پہلے اسناد، دستیابی، فیس اور رابطے کی تفصیل براہِ راست ضرور چیک کریں۔', noSpecialists: 'ابھی کوئی تصدیق شدہ اندراج نہیں', noSpecialistsBody: 'اس جگہ کو اس وقت تک مقامی سروس تلاش کرنے کے لیے استعمال کریں جب تک آپ تفصیل کی تصدیق کریں۔', verify: 'تفصیل کی تصدیق ضروری ہے', placeholderTag: 'عارضی / نامکمل',
+    specialistsTitle: 'کراچی میں مدد تلاش کرنا۔', specialistsBody: 'مقامی اور آن لائن ذہنی صحت کی مدد تلاش کرنے کے لیے عملی آغاز۔', searchPlaceholder: 'نام، علاقے یا مدد کی قسم سے تلاش کریں', allAreas: 'تمام علاقے', directoryNote: 'یہ اختیارات عوامی تنظیمی ویب سائٹس سے لیے گئے ہیں۔ ذاتی معلومات دینے سے پہلے اسناد، دستیابی، فیس اور رابطے کی تفصیل براہِ راست ضرور چیک کریں۔', noSpecialists: 'کوئی مدد کا اختیار نہیں ملا', noSpecialistsBody: 'دوسرا علاقہ یا تلاش کا لفظ آزمائیں۔ فوری خطرے کی صورت میں قریبی ہسپتال کے ایمرجنسی ڈیپارٹمنٹ جائیں۔', verify: 'رابطے سے پہلے تفصیل چیک کریں', officialSource: 'سرکاری ذریعہ', viewWebsite: 'ویب سائٹ کھولیں', callSupport: 'کال کریں', hours: 'اوقات', address: 'مقام', results: 'مدد کے اختیارات', areaDha: 'ڈی ایچ اے', areaKorangi: 'کورنگی', areaKeamari: 'کیماڑی', areaNazimabad: 'ناظم آباد', areaNorthNazimabad: 'نارتھ ناظم آباد', placeholderTag: 'عوامی ذریعہ · موجودہ تفصیل چیک کریں',
     settingsTitle: 'ایک ایسی جگہ جو آپ کے ساتھ رہے۔', language: 'زبان', languageBody: 'چنیں کہ سائیک ویل آپ سے کیسے بات کرے۔', privacy: 'پرائیویسی، آسان لفظوں میں', clearData: 'سائیک ویل کا تمام ڈیٹا صاف کریں', clearDataHint: 'یہ واپس نہیں ہو سکتا۔', clearConfirm: 'تمام مقامی ڈیٹا صاف کرنا ہے؟ آپ کے صفحات، موڈ، گفتگو اور نتائج اس براؤزر سے ہٹا دیے جائیں گے۔', cleared: 'مقامی ڈیٹا صاف ہوگیا', about: 'سائیک ویل کے بارے میں', aboutBody: 'پاکستان کے لوگوں کے لیے سوچنے، چیک اِن کرنے اور اپنا خیال رکھنے کی ایک نجی جگہ — انگریزی یا اردو میں۔', version: 'براؤزر تک محدود ایڈیشن · 1.0', close: 'بند کریں',
     errorTitle: 'صفحے نے ایک خاموش وقفہ لیا۔', errorBody: 'آج والے صفحے پر واپس جائیں۔', goHome: 'آج پر واپس جائیں',
   },
@@ -158,6 +159,9 @@ const localizeBand = (band: string, lang: Lang) => lang === 'en' ? band : ({
   'Average satisfaction range': 'اوسط اطمینان کی حد',
   'Higher satisfaction range': 'زیادہ اطمینان کی حد',
 } as Record<string, string>)[band] ?? band;
+const crisisPattern = /suicid|kill myself|end my life|hurt myself|self[- ]?harm|want to die|better off dead|can't stay safe|cannot stay safe|مر جانا|خودکشی|خود کو نقصان|اپنے آپ کو نقصان|زندگی ختم|محفوظ نہیں/;
+const isCrisisLanguage = (message: string) => crisisPattern.test(message.toLocaleLowerCase());
+const getSafetyResponse = (lang: Lang) => copy[lang].ariaSafetyBody;
 function getAIResponse(message: string, lang: Lang) {
   const t = copy[lang];
   const normalized = message.toLocaleLowerCase();
@@ -178,6 +182,21 @@ function getAIResponse(message: string, lang: Lang) {
   return message.length > 90 ? t.ariaFallback2 : t.ariaFallback;
 }
 
+async function requestAriaResponse(message: string, chats: ChatMessage[], lang: Lang) {
+  const response = await fetch('/api/aria/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message,
+      language: lang,
+      history: chats.slice(-12).map(({ role, content }) => ({ role, content })),
+    }),
+  });
+  const data = await response.json().catch(() => null) as { reply?: string; error?: string } | null;
+  if (!response.ok || !data?.reply) throw new Error(data?.error || 'AI request failed');
+  return data.reply;
+}
+
 type Exercise = { id: string; icon: typeof Wind; title: string; urdu: string; desc: string; urduDesc: string; mins: number; steps: { en: string; ur: string }[]; moods: Mood[] };
 const exerciseData: Exercise[] = [
   { id: 'breathing', icon: Wind, title: 'Box breathing', urdu: 'چار مرحلوں والی سانس', desc: 'A simple rhythm to help your body find a slower gear.', urduDesc: 'جسم کو آہستہ ہونے میں مدد دینے والی سادہ لے۔', mins: 3, steps: [{ en: 'Sit comfortably and soften your shoulders.', ur: 'آرام سے بیٹھیں اور کندھوں کو ڈھیلا چھوڑ دیں۔' }, { en: 'Breathe in gently for four counts.', ur: 'چار گنتی تک نرمی سے سانس اندر لیں۔' }, { en: 'Pause for four, breathe out for four, then pause for four.', ur: 'چار گنتی روکیں، چار گنتی میں باہر نکالیں، پھر چار گنتی وقفہ کریں۔' }], moods: ['low', 'uneasy', 'steady'] },
@@ -189,6 +208,112 @@ const exerciseData: Exercise[] = [
   { id: 'tiny-step', icon: Play, title: 'The next ten minutes', urdu: 'اگلے دس منٹ', desc: 'Turn an overwhelming day into one small, doable action.', urduDesc: 'بہت بھاری دن کو ایک چھوٹے، قابلِ عمل قدم میں بدلیں۔', mins: 3, steps: [{ en: 'Choose one task that would make the next ten minutes kinder.', ur: 'ایک ایسا کام چنیں جو اگلے دس منٹ کو آسان بنائے۔' }, { en: 'Make it smaller than your first instinct.', ur: 'اپنی پہلی سوچ سے بھی اسے چھوٹا کریں۔' }, { en: 'Begin for two minutes. Stopping is allowed.', ur: 'دو منٹ کے لیے شروع کریں۔ رکنا بھی جائز ہے۔' }], moods: ['low', 'uneasy', 'steady'] },
   { id: 'self-compassion', icon: Heart, title: 'Speak to yourself as a friend', urdu: 'دوست کی طرح خود سے بات', desc: 'Offer yourself the tone you would offer someone you love.', urduDesc: 'اپنے لیے وہی لہجہ اپنائیں جو کسی عزیز کے لیے اپناتے۔', mins: 4, steps: [{ en: 'Notice the hard thing without arguing with it.', ur: 'مشکل بات کو بغیر بحث کے محسوس کریں۔' }, { en: 'Say: this is hard, and I am not the only person who feels this.', ur: 'کہیں: یہ مشکل ہے، اور صرف میں ہی ایسا محسوس نہیں کرتا۔' }, { en: 'Ask what a caring friend would suggest for tonight.', ur: 'پوچھیں کہ خیال رکھنے والا دوست آج رات کے لیے کیا مشورہ دیتا۔' }], moods: ['low', 'uneasy'] },
   { id: 'unplug', icon: Clock3, title: 'A soft reset', urdu: 'نرم سا ری سیٹ', desc: 'A short pause to shift from stimulation into presence.', urduDesc: 'توجہ واپس لانے کے لیے مصروفیت سے ایک مختصر وقفہ۔', mins: 2, steps: [{ en: 'Put one screen face down and unclench your jaw.', ur: 'ایک اسکرین الٹی رکھیں اور جبڑا ڈھیلا کریں۔' }, { en: 'Take three unhurried breaths and drink some water.', ur: 'تین بے جلد سانسیں لیں اور پانی پئیں۔' }, { en: 'Choose what deserves your attention next.', ur: 'چنیں کہ اگلی توجہ کس چیز کو دینی ہے۔' }], moods: ['good', 'bright', 'steady'] },
+];
+
+type SupportListing = {
+  id: string;
+  name: string;
+  kind: string;
+  kindUr: string;
+  area: string;
+  areaUr: string;
+  address: string;
+  addressUr: string;
+  description: string;
+  descriptionUr: string;
+  hours: string;
+  hoursUr: string;
+  phone?: string;
+  phoneHref?: string;
+  website: string;
+};
+
+const supportListings: SupportListing[] = [
+  {
+    id: 'karwan-korangi',
+    name: 'Karwan-e-Hayat',
+    kind: 'Psychiatric care · assessments · rehabilitation',
+    kindUr: 'نفسیاتی نگہداشت · جانچ · بحالی',
+    area: 'Korangi',
+    areaUr: 'کورنگی',
+    address: 'Community Psychiatric Center, Sector 48-H, Qabrastan Road, Creek General Hospital',
+    addressUr: 'کمیونٹی سائیکائٹرک سینٹر، سیکٹر 48-H، قبرستان روڈ، کریک جنرل ہسپتال',
+    description: 'Non-profit mental-health care with psychiatric consultation, psychological assessments, rehabilitation, and tele-psychiatry.',
+    descriptionUr: 'غیر منافع بخش ذہنی صحت کی تنظیم؛ نفسیاتی مشاورت، نفسیاتی جانچ، بحالی اور ٹیلی سائیکائٹری کی سہولت۔',
+    hours: 'Confirm current timings',
+    hoursUr: 'موجودہ اوقات چیک کریں',
+    phone: '(021) 111-534-111',
+    phoneHref: 'tel:+9221111534111',
+    website: 'https://keh.org.pk/services/',
+  },
+  {
+    id: 'karwan-keamari',
+    name: 'Karwan-e-Hayat',
+    kind: 'Psychiatric care · subsidized services',
+    kindUr: 'نفسیاتی نگہداشت · رعایتی خدمات',
+    area: 'Keamari',
+    areaUr: 'کیماڑی',
+    address: 'PCRC, Buildings KV 27 & 28, near KPT Hospital',
+    addressUr: 'PCRC، عمارتیں KV 27 اور 28، کے پی ٹی ہسپتال کے قریب',
+    description: 'A Karachi mental-health organization offering care and rehabilitation, including support for underserved communities.',
+    descriptionUr: 'کراچی کی ذہنی صحت کی تنظیم جو کم سہولیات والے لوگوں سمیت نگہداشت اور بحالی کی خدمات فراہم کرتی ہے۔',
+    hours: 'Confirm current timings',
+    hoursUr: 'موجودہ اوقات چیک کریں',
+    phone: '(021) 111-534-111',
+    phoneHref: 'tel:+9221111534111',
+    website: 'https://keh.org.pk/',
+  },
+  {
+    id: 'taskeen-dha',
+    name: 'Taskeen',
+    kind: 'Free telephonic support · online screening',
+    kindUr: 'مفت ٹیلی فونک مدد · آن لائن جانچ',
+    area: 'DHA',
+    areaUr: 'ڈی ایچ اے',
+    address: '3rd Floor, Plot 73C, Jami Commercial, Phase 7, DHA',
+    addressUr: 'تیسری منزل، پلاٹ 73C، جامی کمرشل، فیز 7، ڈی ایچ اے',
+    description: 'Free-of-cost telephonic mental-health support from Monday to Saturday, 11 AM–11 PM, with trained professionals.',
+    descriptionUr: 'پیر تا ہفتہ صبح 11 بجے سے رات 11 بجے تک تربیت یافتہ ماہرین کی مفت ٹیلی فونک ذہنی صحت مدد۔',
+    hours: 'Mon–Sat · 11 AM–11 PM',
+    hoursUr: 'پیر تا ہفتہ · صبح 11 تا رات 11',
+    phone: '0316 8275336',
+    phoneHref: 'tel:+923168275336',
+    website: 'https://taskeen.org/seek-help',
+  },
+  {
+    id: 'kph-nazimabad',
+    name: 'Karachi Psychiatric Hospital',
+    kind: 'Psychiatric hospital · 24/7 contact',
+    kindUr: 'نفسیاتی ہسپتال · 24/7 رابطہ',
+    area: 'Nazimabad',
+    areaUr: 'ناظم آباد',
+    address: 'B, 1/14, Nazimabad #3, Karachi',
+    addressUr: 'B، 1/14، ناظم آباد نمبر 3، کراچی',
+    description: 'Psychiatric care and support with a head office in Nazimabad. Contact the hospital directly for current services and availability.',
+    descriptionUr: 'ناظم آباد میں مرکزی دفتر کے ساتھ نفسیاتی نگہداشت اور مدد۔ موجودہ خدمات اور دستیابی کے لیے ہسپتال سے براہِ راست رابطہ کریں۔',
+    hours: '24/7 contact listed',
+    hoursUr: '24/7 رابطہ درج ہے',
+    phone: '021-36708092',
+    phoneHref: 'tel:+922136708092',
+    website: 'https://kphonline.com.pk/contact-us/',
+  },
+  {
+    id: 'kph-north-nazimabad',
+    name: 'Karachi Psychiatric Hospital',
+    kind: 'Psychiatric care · North Nazimabad branch',
+    kindUr: 'نفسیاتی نگہداشت · نارتھ ناظم آباد برانچ',
+    area: 'North Nazimabad',
+    areaUr: 'نارتھ ناظم آباد',
+    address: 'Mubin House, D-58, Block B, North Nazimabad, Karachi',
+    addressUr: 'مبین ہاؤس، D-58، بلاک B، نارتھ ناظم آباد، کراچی',
+    description: 'North Nazimabad branch listed by Karachi Psychiatric Hospital. Confirm appointments, fees, and available services directly.',
+    descriptionUr: 'کراچی سائیکائٹرک ہسپتال کی درج کردہ نارتھ ناظم آباد برانچ۔ اپائنٹمنٹ، فیس اور دستیاب خدمات براہِ راست چیک کریں۔',
+    hours: 'Confirm current timings',
+    hoursUr: 'موجودہ اوقات چیک کریں',
+    phone: '021-36646944',
+    phoneHref: 'tel:+922136646944',
+    website: 'https://kphonline.com.pk/contact-us/',
+  },
 ];
 
 function Button({ children, variant = 'primary', className = '', ...props }: { children: ReactNode; variant?: 'primary' | 'quiet' | 'outline' | 'danger'; className?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
@@ -221,7 +346,7 @@ function Onboarding({ settings, setSettings }: { settings: Settings; setSettings
       <div className="welcome-kicker"><span className="kicker-line" /> {t.mark}</div>
       <h1 className="font-serif" data-testid="text-welcome-title">{t.welcomeTitle}</h1>
       <p>{t.welcomeBody}</p>
-      <Button data-testid="button-begin-onboarding" onClick={() => setSettings({ language, onboarded: true })}>{t.begin} <ArrowRight size={17} /></Button>
+      <Button data-testid="button-begin-onboarding" onClick={() => setSettings({ ...settings, language, onboarded: true })}>{t.begin} <ArrowRight size={17} /></Button>
       <div className="welcome-foot"><ShieldCheck size={16} /><span>{t.welcomeFoot}</span></div>
     </section>
     <div className="welcome-seal"><span>PW</span><small>local<br />only</small></div>
@@ -281,18 +406,55 @@ function JournalPage({ lang, journals, onAdd, onDelete }: { lang: Lang; journals
   </main>;
 }
 
-function AriaPage({ lang, chats, onSend, onClear }: { lang: Lang; chats: ChatMessage[]; onSend: (message: ChatMessage) => void; onClear: () => void }) {
+function AriaPage({ lang, chats, mode, onModeChange, onSend, onClear }: { lang: Lang; chats: ChatMessage[]; mode: AriaMode; onModeChange: (mode: AriaMode) => void; onSend: (message: ChatMessage) => void; onClear: () => void }) {
   const t = copy[lang];
   const [text, setText] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [showConsent, setShowConsent] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [error, setError] = useState(false);
+  const [safetyShown, setSafetyShown] = useState(false);
   const responseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => { if (responseTimer.current) clearTimeout(responseTimer.current); }, []);
-  const send = () => {
+  const requestController = useRef<AbortController | null>(null);
+  useEffect(() => () => {
+    if (responseTimer.current) clearTimeout(responseTimer.current);
+    requestController.current?.abort();
+  }, []);
+  const enableRealAi = () => {
+    if (!consentChecked) return;
+    onModeChange('real');
+    setShowConsent(false);
+    setConsentChecked(false);
+  };
+  const send = async () => {
     if (!text.trim() || isThinking) return;
     const content = text.trim();
     onSend({ id: uid(), role: 'user', content, createdAt: now() });
     setText('');
     setIsThinking(true);
+    setError(false);
+    if (isCrisisLanguage(content)) {
+      onSend({ id: uid(), role: 'assistant', content: getSafetyResponse(lang), createdAt: now() });
+      setSafetyShown(true);
+      setIsThinking(false);
+      return;
+    }
+    if (mode === 'real') {
+      requestController.current = new AbortController();
+      try {
+        const reply = await requestAriaResponse(content, chats, lang);
+        onSend({ id: uid(), role: 'assistant', content: reply, createdAt: now() });
+      } catch (requestError) {
+        if ((requestError as Error).name !== 'AbortError') {
+          setError(true);
+          setText(content);
+        }
+      } finally {
+        requestController.current = null;
+        setIsThinking(false);
+      }
+      return;
+    }
     responseTimer.current = setTimeout(() => {
       onSend({ id: uid(), role: 'assistant', content: getAIResponse(content, lang), createdAt: now() });
       setIsThinking(false);
@@ -301,11 +463,14 @@ function AriaPage({ lang, chats, onSend, onClear }: { lang: Lang; chats: ChatMes
   };
   const clear = () => {
     if (responseTimer.current) clearTimeout(responseTimer.current);
+    requestController.current?.abort();
     responseTimer.current = null;
     setIsThinking(false);
+    setError(false);
+    setSafetyShown(false);
     onClear();
   };
-  return <main className="content aria-page page-enter"><div className="aria-intro"><div className="aria-orb"><span>PW</span><div /></div><PageHeading eyebrow={t.nav.aria} title={t.ariaTitle} body={t.ariaBody} /></div><Card className="disclaimer"><CircleHelp size={17} /><p>{t.ariaDisclaimer}</p></Card><Card className="chat-card"><div className="chat-top"><div><strong>{t.nav.aria}</strong><span className="online-dot" /> <small>{t.savedShort}</small></div>{chats.length > 0 && <button className="text-link" onClick={() => window.confirm(t.clearChat) && clear()}><Trash2 size={14} /> {t.clearChat}</button>}</div><div className="chat-log">{!chats.length ? <div className="chat-empty"><div className="chat-star"><Sparkles size={21} /></div><h3 className="font-serif">{t.chatEmpty}</h3><p>{t.chatEmptyBody}</p></div> : chats.map((message) => <div className={`chat-bubble-row ${message.role}`} key={message.id}><div className={`chat-bubble ${message.role}`} data-testid={`chat-message-${message.id}`}>{message.content}<span>{formatTime(message.createdAt, lang)}</span></div></div>)}{isThinking && <div className="chat-bubble-row assistant" aria-live="polite"><div className="chat-bubble assistant thinking-bubble"><span className="thinking-dots"><i /><i /><i /></span></div></div>}</div><div className="chat-input"><textarea data-testid="input-aria-message" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder={t.inputPlaceholder} rows={1} /><Button aria-label={t.send} data-testid="button-send-aria" onClick={send} disabled={!text.trim() || isThinking}><Send size={17} /></Button></div></Card></main>;
+  return <main className="content aria-page page-enter"><div className="aria-intro"><div className="aria-orb"><span>PW</span><div /></div><PageHeading eyebrow={t.nav.aria} title={t.ariaTitle} body={t.ariaBody} /></div><Card className="disclaimer"><CircleHelp size={17} /><p>{t.ariaDisclaimer}</p></Card><section className="aria-mode" aria-labelledby="aria-mode-title"><div className="aria-mode-heading"><div><span className="eyebrow">{t.ariaModeLabel}</span><h2 id="aria-mode-title" className="font-serif">{mode === 'real' ? t.ariaRealMode : t.ariaOfflineMode}</h2></div><span className={`mode-chip ${mode}`}><span />{mode === 'real' ? t.ariaRealMode : t.ariaOfflineMode}</span></div><div className="mode-options"><button className={mode === 'offline' ? 'selected' : ''} onClick={() => { onModeChange('offline'); setShowConsent(false); }}><span className="mode-option-title"><LockKeyhole size={15} />{t.ariaOfflineMode}</span><small>{t.ariaOfflineDetail}</small></button><button className={mode === 'real' ? 'selected' : ''} onClick={() => mode === 'real' ? undefined : setShowConsent(true)}><span className="mode-option-title"><Sparkles size={15} />{t.ariaRealMode}</span><small>{t.ariaRealDetail}</small></button></div>{mode === 'real' ? <p className="mode-notice real"><ShieldCheck size={15} />{t.ariaPrivacyActive}<button className="text-link" onClick={() => onModeChange('offline')}>{t.ariaSwitchOffline}</button></p> : <p className="mode-notice"><LockKeyhole size={15} />{t.ariaOfflineActive}</p>}{showConsent && <div className="consent-panel"><h3 className="font-serif">{t.ariaConsentTitle}</h3><p>{t.ariaConsentBody}</p><label><input type="checkbox" checked={consentChecked} onChange={(e) => setConsentChecked(e.target.checked)} /> <span>{t.ariaConsentCheck}</span></label><div className="consent-actions"><Button variant="quiet" onClick={() => { setShowConsent(false); setConsentChecked(false); }}>{t.ariaKeepOffline}</Button><Button onClick={enableRealAi} disabled={!consentChecked}>{t.ariaConsentConfirm} <Sparkles size={15} /></Button></div></div>}</section>{error && <div className="aria-error" role="alert"><CircleHelp size={17} /><span>{t.ariaNetworkError}</span></div>}{safetyShown && <div className="aria-safety-note"><ShieldCheck size={16} /><span><strong>{t.ariaSafetyTitle}</strong>{t.ariaSafetyAck}</span></div>}<Card className="chat-card"><div className="chat-top"><div><strong>{t.nav.aria}</strong><span className={`online-dot ${mode}`} /> <small>{mode === 'real' ? t.ariaRealMode : t.savedShort}</small></div>{chats.length > 0 && <button className="text-link" onClick={() => window.confirm(t.clearChat) && clear()}><Trash2 size={14} /> {t.clearChat}</button>}</div><div className="chat-log">{!chats.length ? <div className="chat-empty"><div className="chat-star"><Sparkles size={21} /></div><h3 className="font-serif">{t.chatEmpty}</h3><p>{t.chatEmptyBody}</p></div> : chats.map((message) => <div className={`chat-bubble-row ${message.role}`} key={message.id}><div className={`chat-bubble ${message.role}`} data-testid={`chat-message-${message.id}`}>{message.content}<span>{formatTime(message.createdAt, lang)}</span></div></div>)}{isThinking && <div className="chat-bubble-row assistant" aria-live="polite"><div className="chat-bubble assistant thinking-bubble"><span className="thinking-dots"><i /><i /><i /></span></div></div>}</div><div className="chat-input"><textarea data-testid="input-aria-message" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }} placeholder={t.inputPlaceholder} rows={1} /><Button aria-label={t.send} data-testid="button-send-aria" onClick={() => void send()} disabled={!text.trim() || isThinking}><Send size={17} /></Button></div></Card></main>;
 }
 
 function AssessmentsPage({ lang, results, onResult }: { lang: Lang; results: AssessmentResult[]; onResult: (result: AssessmentResult) => void }) {
@@ -328,19 +493,39 @@ function ExercisesPage({ lang }: { lang: Lang }) {
 }
 
 function SpecialistsPage({ lang }: { lang: Lang }) {
-  const t = copy[lang]; const [search, setSearch] = useState(''); const areas = ['Clifton', 'Gulshan-e-Iqbal', 'PECHS', 'North Nazimabad']; return <main className="content page-enter"><PageHeading eyebrow={t.nav.specialists} title={t.specialistsTitle} body={t.specialistsBody} /><Card className="directory-notice"><ShieldCheck size={20} /><p>{t.directoryNote}</p></Card><div className="directory-tools"><div className="search-box"><Search size={18} /><input data-testid="input-specialist-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t.searchPlaceholder} /></div><select data-testid="select-specialist-area" aria-label={t.allAreas}><option>{t.allAreas}</option>{areas.map((area) => <option key={area}>{area}</option>)}</select></div><div className="directory-placeholder"><div className="directory-stamp"><Compass size={27} /></div><span className="eyebrow">{t.placeholderTag}</span><h2 className="font-serif">{t.noSpecialists}</h2><p>{t.noSpecialistsBody}</p><div className="placeholder-lines"><span /><span /><span /></div><strong><Info size={15} /> {t.verify}</strong></div></main>;
+  const t = copy[lang];
+  const [search, setSearch] = useState('');
+  const [area, setArea] = useState('all');
+  const areas = [
+    { value: 'DHA', label: t.areaDha },
+    { value: 'Korangi', label: t.areaKorangi },
+    { value: 'Keamari', label: t.areaKeamari },
+    { value: 'Nazimabad', label: t.areaNazimabad },
+    { value: 'North Nazimabad', label: t.areaNorthNazimabad },
+  ];
+  const query = search.trim().toLocaleLowerCase();
+  const visibleListings = supportListings.filter((listing) => {
+    const matchesArea = area === 'all' || listing.area === area;
+    const searchable = [listing.name, listing.kind, listing.kindUr, listing.area, listing.areaUr, listing.address, listing.addressUr, listing.description, listing.descriptionUr].join(' ').toLocaleLowerCase();
+    return matchesArea && (!query || searchable.includes(query));
+  });
+  return <main className="content page-enter"><PageHeading eyebrow={t.nav.specialists} title={t.specialistsTitle} body={t.specialistsBody} /><Card className="directory-notice"><ShieldCheck size={20} /><p>{t.directoryNote}</p></Card><div className="directory-tools"><div className="search-box"><Search size={18} /><input data-testid="input-specialist-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t.searchPlaceholder} /></div><select data-testid="select-specialist-area" aria-label={t.allAreas} value={area} onChange={(e) => setArea(e.target.value)}><option value="all">{t.allAreas}</option>{areas.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></div><div className="directory-summary"><span>{visibleListings.length} {t.results}</span>{(search || area !== 'all') && <button className="text-link" onClick={() => { setSearch(''); setArea('all'); }}>{lang === 'ur' ? 'فلٹر صاف کریں' : 'Clear filters'}</button>}</div>{visibleListings.length ? <div className="directory-grid">{visibleListings.map((listing) => <Card className="directory-card" key={listing.id}><div className="directory-card-top"><div className="directory-stamp small"><Compass size={21} /></div><span className="directory-area">{lang === 'ur' ? listing.areaUr : listing.area}</span></div><span className="eyebrow">{lang === 'ur' ? listing.kindUr : listing.kind}</span><h2 className="font-serif">{listing.name}</h2><p>{lang === 'ur' ? listing.descriptionUr : listing.description}</p><div className="directory-detail"><span><Info size={14} /><strong>{t.address}</strong>{lang === 'ur' ? listing.addressUr : listing.address}</span><span><Clock3 size={14} /><strong>{t.hours}</strong>{lang === 'ur' ? listing.hoursUr : listing.hours}</span></div><div className="directory-actions">{listing.phoneHref && <a className="pw-btn pw-btn-outline" href={listing.phoneHref}><PhoneIcon size={15} /> {t.callSupport}</a>}<a className="pw-btn pw-btn-quiet" href={listing.website} target="_blank" rel="noreferrer">{t.viewWebsite} <ArrowUpRight size={15} /></a></div><div className="directory-source"><ShieldCheck size={13} /> {t.officialSource} · {t.verify}</div></Card>)}</div> : <div className="directory-placeholder"><div className="directory-stamp"><Search size={27} /></div><span className="eyebrow">{t.placeholderTag}</span><h2 className="font-serif">{t.noSpecialists}</h2><p>{t.noSpecialistsBody}</p><strong><Info size={15} /> {t.verify}</strong></div>}</main>;
 }
 
 function SettingsPage({ settings, lang, onLanguage, onClear }: { settings: Settings; lang: Lang; onLanguage: (lang: Lang) => void; onClear: () => void }) {
   const t = copy[lang]; const [about, setAbout] = useState(false); const [notice, setNotice] = useState(false); const clear = () => { if (window.confirm(t.clearConfirm)) { onClear(); setNotice(true); setTimeout(() => setNotice(false), 2600); } };
-  return <main className="content page-enter"><PageHeading eyebrow={t.nav.settings} title={t.settingsTitle} /><div className="settings-layout"><section className="settings-main"><Card className="setting-block"><div className="setting-icon"><span>文</span></div><div className="setting-copy"><h2>{t.language}</h2><p>{t.languageBody}</p></div><div className="language-switch"><button className={settings.language === 'en' ? 'selected' : ''} data-testid="button-settings-english" onClick={() => onLanguage('en')}>English</button><button className={settings.language === 'ur' ? 'selected' : ''} data-testid="button-settings-urdu" onClick={() => onLanguage('ur')}>اردو</button></div></Card><Card className="setting-block privacy-block"><div className="setting-icon"><LockKeyhole size={20} /></div><div className="setting-copy"><h2>{t.privacy}</h2><p>{t.privacyBody}</p><div className="privacy-list"><span><Check size={14} /> {lang === 'ur' ? 'صرف آپ کے براؤزر میں' : 'Only in your browser'}</span><span><Check size={14} /> {lang === 'ur' ? 'کوئی نیٹ ورک نہیں' : 'No network requests'}</span><span><Check size={14} /> {lang === 'ur' ? 'آپ کا مکمل اختیار' : 'You stay in control'}</span></div></div></Card><Card className="danger-block"><div><h2>{t.clearData}</h2><p>{t.clearDataHint}</p></div><Button variant="danger" data-testid="button-clear-data" onClick={clear}><Trash2 size={16} /> {t.clearData}</Button></Card>{notice && <div className="save-notice"><Check size={16} /> {t.cleared}</div>}</section><aside className="about-card"><div className="about-mark">PW</div><span className="eyebrow">{t.about}</span><h2 className="font-serif">{t.appName}</h2><p>{t.aboutBody}</p><div className="about-rule" /><small>{t.version}</small><button className="text-link" onClick={() => setAbout(!about)}>{about ? t.close : t.about} <ChevronDown size={15} className={about ? 'rotate' : ''} /></button>{about && <p className="about-extra">{lang === 'ur' ? 'یہ ایپ مقامی طور پر آپ کی عادات اور غور و فکر کے لیے بنائی گئی ہے۔' : 'Made for private reflection, gentle routines, and the days that need a little more room.'}</p>}</aside></div></main>;
+  return <main className="content page-enter"><PageHeading eyebrow={t.nav.settings} title={t.settingsTitle} /><div className="settings-layout"><section className="settings-main"><Card className="setting-block"><div className="setting-icon"><span>文</span></div><div className="setting-copy"><h2>{t.language}</h2><p>{t.languageBody}</p></div><div className="language-switch"><button className={settings.language === 'en' ? 'selected' : ''} data-testid="button-settings-english" onClick={() => onLanguage('en')}>English</button><button className={settings.language === 'ur' ? 'selected' : ''} data-testid="button-settings-urdu" onClick={() => onLanguage('ur')}>اردو</button></div></Card><Card className="setting-block privacy-block"><div className="setting-icon"><LockKeyhole size={20} /></div><div className="setting-copy"><h2>{t.privacy}</h2><p>{settings.ariaMode === 'real' ? t.ariaPrivacyActive : t.privacyBody}</p><div className="privacy-list"><span><Check size={14} /> {lang === 'ur' ? 'صرف آپ کے براؤزر میں' : 'Only in your browser'}</span><span><Check size={14} /> {settings.ariaMode === 'real' ? t.ariaRealMode : (lang === 'ur' ? 'کوئی نیٹ ورک نہیں' : 'No network requests')}</span><span><Check size={14} /> {lang === 'ur' ? 'آپ کا مکمل اختیار' : 'You stay in control'}</span></div></div></Card><Card className="danger-block"><div><h2>{t.clearData}</h2><p>{t.clearDataHint}</p></div><Button variant="danger" data-testid="button-clear-data" onClick={clear}><Trash2 size={16} /> {t.clearData}</Button></Card>{notice && <div className="save-notice"><Check size={16} /> {t.cleared}</div>}</section><aside className="about-card"><div className="about-mark">PW</div><span className="eyebrow">{t.about}</span><h2 className="font-serif">{t.appName}</h2><p>{t.aboutBody}</p><div className="about-rule" /><small>{t.version}</small><button className="text-link" onClick={() => setAbout(!about)}>{about ? t.close : t.about} <ChevronDown size={15} className={about ? 'rotate' : ''} /></button>{about && <p className="about-extra">{lang === 'ur' ? 'یہ ایپ مقامی طور پر آپ کی عادات اور غور و فکر کے لیے بنائی گئی ہے۔' : 'Made for private reflection, gentle routines, and the days that need a little more room.'}</p>}</aside></div></main>;
 }
 
 function NotFoundPage({ lang, setLocation }: { lang: Lang; setLocation: (path: string) => void }) { const t = copy[lang]; return <main className="content error-page"><div className="error-symbol"><CircleHelp size={27} /></div><h1 className="font-serif">{t.errorTitle}</h1><p>{t.errorBody}</p><Button onClick={() => setLocation('/')}>{t.goHome} <ArrowRight size={16} /></Button></main>; }
 
 function App() {
   const [location, setLocation] = useLocation();
-  const [settings, setSettingsState] = useState<Settings>(() => getStored(KEY.settings, getStored<Profile>(KEY.profile, { language: 'en', onboarded: false })));
+  const [settings, setSettingsState] = useState<Settings>(() => {
+    const stored = getStored<Partial<Settings>>(KEY.settings, {});
+    const profile = getStored<Profile>(KEY.profile, { language: 'en', onboarded: false });
+    return { language: stored.language ?? profile.language, onboarded: stored.onboarded ?? profile.onboarded, ariaMode: stored.ariaMode === 'real' ? 'real' : 'offline' };
+  });
   const [journals, setJournals] = useState<JournalEntry[]>(() => getStored(KEY.journals, []));
   const [moodsLogs, setMoodsLogs] = useState<MoodLog[]>(() => getStored(KEY.moods, []));
   const [chats, setChats] = useState<ChatMessage[]>(() => getStored(KEY.chats, []));
@@ -355,12 +540,12 @@ function App() {
   useEffect(() => { document.documentElement.lang = lang; document.documentElement.dir = lang === 'ur' ? 'rtl' : 'ltr'; }, [lang]);
   const setSettings = (next: Settings) => setSettingsState(next);
   const onMood = (mood: Mood) => { const log = { id: uid(), createdAt: now(), mood }; setMoodsLogs((logs) => [...logs, log]); };
-  const onClear = () => { Object.keys(localStorage).filter((key) => key.startsWith('psychwell_')).forEach((key) => localStorage.removeItem(key)); setSettingsState({ language: lang, onboarded: false }); setJournals([]); setMoodsLogs([]); setChats([]); setResults([]); setLocation('/'); };
+  const onClear = () => { Object.keys(localStorage).filter((key) => key.startsWith('psychwell_')).forEach((key) => localStorage.removeItem(key)); setSettingsState({ language: lang, onboarded: false, ariaMode: 'offline' }); setJournals([]); setMoodsLogs([]); setChats([]); setResults([]); setLocation('/'); };
   if (!settings.onboarded) return <Onboarding settings={settings} setSettings={setSettings} />;
   let page: ReactNode;
   if (location === '/') page = <HomePage lang={lang} moodsLogs={moodsLogs} journals={journals} onMood={onMood} setLocation={setLocation} />;
   else if (location === '/journal') page = <JournalPage lang={lang} journals={journals} onAdd={(entry) => { setJournals((all) => [...all, entry]); setMoodsLogs((all) => [...all, { id: entry.id, createdAt: entry.createdAt, mood: entry.mood }]); }} onDelete={(id) => setJournals((all) => all.filter((entry) => entry.id !== id))} />;
-  else if (location === '/aria') page = <AriaPage lang={lang} chats={chats} onSend={(message) => setChats((all) => [...all, message])} onClear={() => setChats([])} />;
+  else if (location === '/aria') page = <AriaPage lang={lang} chats={chats} mode={settings.ariaMode} onModeChange={(ariaMode) => setSettingsState((current) => ({ ...current, ariaMode }))} onSend={(message) => setChats((all) => [...all, message])} onClear={() => setChats([])} />;
   else if (location === '/assessments') page = <AssessmentsPage lang={lang} results={results} onResult={(result) => setResults((all) => [...all, result])} />;
   else if (location === '/exercises' || location.startsWith('/exercises?')) page = <ExercisesPage lang={lang} />;
   else if (location === '/specialists') page = <SpecialistsPage lang={lang} />;
